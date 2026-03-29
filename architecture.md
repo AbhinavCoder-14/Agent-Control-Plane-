@@ -1,27 +1,36 @@
 ﻿# ARCHITECTURE
 
-## Layers
+## System Overview
+Ecommerce web app with customer flow and admin flow.
 
-- Input layer: `backend/src/inputProcessor.js`
-- Watch layer: `backend/src/watcher.js`
-- Parse layer: `backend/src/parser.js`
-- AI layer: `backend/src/geminiClient.js`
-- Deploy layer: `backend/src/deployer.js`
+## Frontend Layer
+- Product Listing: browse/search products
+- Cart: add/remove/update quantities
+- Checkout (Mock): place test orders
+- Admin Dashboard: CRUD products and review orders
 
-## Data Flow
+## Backend Layer
+- REST API with route groups:
+  - /api/products
+  - /api/cart
+  - /api/checkout
+  - /api/admin/*
+- Service logic for pricing, stock checks, and order creation
 
-User Idea -> inputProcessor -> root files -> watcher -> parser -> geminiClient -> `GEMINI/src/output.md`
+## Data Layer (Demo)
+- In-memory or JSON-seeded store
+- Entities: Product, CartItem, Order
 
-## Trace Inputs
+## Agent/AI Layer
+- agentRunner reads steps and generates code
+- watcher monitors trace/perf/history files
+- parser composes prompt from context + telemetry
+- geminiClient writes actionable output to GEMINI/src/output.md
 
-- `traces/session_log/logs.txt`
-- `traces/session_log/agent_trace.txt`
-- `traces/history/history_log.txt`
-- `traces/performance/memory.txt`
-- `traces/performance/latency.txt`
-- `traces/summary/summary.md`
+## Execution Flow
+inputProcessor/context -> agentRunner -> file writes -> trace updates -> watcher -> parser -> geminiClient -> output
 
-## Deployment Targets
-
-- Vercel
-- GCP
+## Non-Functional Requirements
+- Safe writes for generated files
+- Basic race protection in watcher loop
+- Deterministic logs for debugging and replay

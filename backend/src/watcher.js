@@ -56,12 +56,39 @@ function ensureRequiredFiles() {
 
 function acquireRunLock() {
     fs.mkdirSync(path.dirname(LOCK_PATH), { recursive: true });
+
+    const isProcessRunning = (pid) => {
+        if (!pid || Number.isNaN(pid)) return false;
+        try {
+            process.kill(pid, 0);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    };
+
     try {
         const fd = fs.openSync(LOCK_PATH, 'wx');
         fs.writeFileSync(fd, `${process.pid}`);
         fs.closeSync(fd);
         return true;
     } catch (error) {
+        if (error && error.code === 'EEXIST') {
+            const existing = readSafe(LOCK_PATH).trim();
+            const existingPid = parseInt(existing, 10);
+
+            if (!isProcessRunning(existingPid)) {
+                try {
+                    fs.unlinkSync(LOCK_PATH);
+                    const fd = fs.openSync(LOCK_PATH, 'wx');
+                    fs.writeFileSync(fd, `${process.pid}`);
+                    fs.closeSync(fd);
+                    return true;
+                } catch (retryError) {
+                    return false;
+                }
+            }
+        }
         return false;
     }
 }
